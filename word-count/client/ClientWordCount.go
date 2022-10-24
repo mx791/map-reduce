@@ -21,6 +21,7 @@ func main() {
 		return
 	}
 	str, _ := json.Marshal([]string{"start-split", string(b)})
+	// str, _ := json.Marshal([]string{"start-split", "un deux deux trois troise trois"})
 	con.Write(str)
 	con.Close()
 	fmt.Println(len(b), "bytes de texte")
