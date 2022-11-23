@@ -21,6 +21,13 @@ func CreateWordCountHandler() WordCountHandler {
 	return WordCountHandler{}
 }
 
+func (x WordCountHandler) Reset() {
+	shuffleDatas = make(map[string]int)
+	reduceDatas = make(map[string]int)
+	reduceMutex = &sync.RWMutex{}
+	shuffleMutex = &sync.RWMutex{}
+}
+
 func (x WordCountHandler) HashWord(word string) int {
 	hash := 1
 	for letter := range word {
@@ -47,6 +54,7 @@ func (x WordCountHandler) ShuffleReceiver(messages []string) {
 // renvoie les données du shuffle, pour que un noeud les aggrègent (reduce)
 func (x WordCountHandler) GetReduceData() string {
 	shuffleMutex.Lock()
+	fmt.Println(len(shuffleDatas), "mots géré par le noeud")
 	map_string, _ := json.Marshal(shuffleDatas)
 	shuffleMutex.Unlock()
 	return string(map_string)
@@ -69,7 +77,7 @@ func (x WordCountHandler) ReduceDone() {
 	reduceMutex.Lock()
 	str, _ := json.Marshal(reduceDatas)
 	reduceMutex.Unlock()
-	os.WriteFile("./out.json", str, 1)
+	os.WriteFile("./out.json", str, 0755)
 }
 
 // fonction de MAP
@@ -115,17 +123,18 @@ func (x WordCountHandler) Map(messages []string, serverCount int) ([]int, []stri
 // sépare le texte par lignes
 func (x WordCountHandler) Split(messages []string, serverCount int) [][]string {
 	text := messages[1]
-	lines := strings.Split(text, "\r")
+	fmt.Println(len(text))
+	lines := strings.Split(text, "\n")
 	fmt.Println("SPLIT", strconv.FormatInt(int64(len(lines)), 10)+" lignes")
 	stepp := len(lines) / serverCount
 
 	linesSplited := make([][]string, serverCount)
 	for id := 0; id < serverCount; id += 1 {
-		txt := ""
+		var txt strings.Builder
 		for id1 := 0; id1 < stepp; id1++ {
-			txt += lines[id*stepp+id1]
+			txt.WriteString(lines[id*stepp+id1])
 		}
-		linesSplited[id] = []string{txt}
+		linesSplited[id] = []string{txt.String()}
 	}
 
 	return linesSplited

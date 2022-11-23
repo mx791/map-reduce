@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
@@ -16,7 +18,7 @@ const (
 	ReduceMsg         = "task-reduce"
 	AddRunnginTask    = "add-running-task"
 	RemoveRunnginTask = "remove-running-task"
-	FileBufferSize    = 1024 * 1024 * 2
+	FileBufferSize    = 1024 * 1024 * 512
 )
 
 func CreateServer(handler MapReducer) Server {
@@ -39,6 +41,7 @@ func LoadWorkerList(path string) []string {
 
 var counter = 0
 var reduceCount = 0
+var startTime = time.Now()
 
 type Server struct {
 	runningTaskCounter int
@@ -62,13 +65,13 @@ func (x Server) Start(port string) {
 }
 
 func (x Server) MainHandler(conn net.Conn) {
-	buf := make([]byte, FileBufferSize)
-	n, _ := conn.Read(buf)
 	messages := make([]string, 0)
-	err := json.Unmarshal(buf[:n], &messages)
+
+	buf, _ := ioutil.ReadAll(conn)
+	err := json.Unmarshal(buf, &messages)
 
 	if err != nil {
-		fmt.Println("erreur reception")
+		fmt.Println("erreur reception", len(buf))
 		conn.Close()
 		return
 	}
@@ -78,6 +81,9 @@ func (x Server) MainHandler(conn net.Conn) {
 	} else if messages[0] == AddRunnginTask {
 		counter += 1
 	} else if messages[0] == StartMessage {
+
+		x.handler.Reset()
+		startTime = time.Now()
 		x.SplitHandler(messages)
 
 	} else if messages[0] == RemoveRunnginTask {
@@ -96,6 +102,7 @@ func (x Server) MainHandler(conn net.Conn) {
 		x.handler.ReduceReceiver(messages)
 		reduceCount += 1
 		if reduceCount == len(x.serverList) {
+			fmt.Println(time.Since(startTime))
 			x.handler.ReduceDone()
 		}
 	}
@@ -108,6 +115,7 @@ func (x Server) SplitHandler(messages []string) {
 		connection, _ := net.Dial("tcp", x.serverList[id])
 		sendData := append([]string{MapMessage}, subs[id]...)
 		str, _ := json.Marshal(sendData)
+		fmt.Println(len(str), "bytes envoyés")
 		connection.Write(str)
 		connection.Close()
 	}

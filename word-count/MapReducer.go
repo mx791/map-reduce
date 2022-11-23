@@ -7,4 +7,5 @@ type MapReducer interface {
 	GetReduceData() string
 	ReduceReceiver(messages []string)
 	ReduceDone()
+	Reset()
 }
