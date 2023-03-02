@@ -11,15 +11,15 @@ go run ServerWordCount.go 1234
 ```
 Il faut également rendre accessible au programme un fichier JSON contenant la liste des noeuds du cluster, ainsi que leur port d'écoute.
 
-## Template
-Un template de l'implémentation est mis à disposition : il suffit de remplir les fonctions vides avec notre code pour bénéficier d'une implémentation fonctionelle.
-Les fonctions à considérer sont :
-- Split
-- Map
-- ShuffleReceiver
-- GetReduceData
-- ReduceReceiver
-- ReduceDone
+## Interface MapReducer
+Cette interface permet de créer des classes exécutées dans un contexte distribué. Il suffit pour cela d'implémenter les méthodes requises.
+- Split : réparti les calculs sur differents noeuds
+- Map : commence le travail sur les données reçues après le split
+- ShuffleReceiver : est appelé quand le noeud reçoit les donénes du shuffle
+- GetReduceData : opération reduce
+- ReduceReceiver : est appelé quand le noeud reçoit les données de reduce des autres noeuds
+- ReduceDone : est appelé quand tous les noeuds ont terminé le reduce
+- Reset : ré-initialise le contexte
 
 ## Word Count
-Utilisation du template décrit ci-dessus pour compter les mots d'un texte. Ici, nous utiliserons un texte de Jules-Verne.
+L'implémentation permet ici de faire un word-count sur un text de Jule Vernes.

@@ -10,9 +10,7 @@ import (
 var server = "localhost:1234"
 
 func main() {
-	// b, err := os.ReadFile("./DeLaTerreALaLune.txt")
-	//b, err := os.ReadFile("./L' le mystérieuse.txt")
-	b, err := os.ReadFile("D:\\projets\\fr-synthaxe-check\\datasets\\europarl-v7.fr-en.fr")
+	b, err := os.ReadFile("./DeLaTerreALaLune.txt")
 	if err != nil {
 		fmt.Println("Impossible de lire le fichier...")
 		return
